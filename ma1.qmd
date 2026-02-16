@@ -1,0 +1,68 @@
+---
+title: "Main Assignment 1"
+author: "Aryah, Nguyen, Jordyn"
+date: "Date: `r Sys.Date()`"
+format: 
+  docx:
+    reference-doc: ../quarto_template.docx
+    number-sections: true
+    number-depth: 3
+    fig-dpi: 500
+    fig-align: center
+    fig-height: 4
+    fig-width: 6
+execute: 
+  echo: false
+  warning: false
+  message: false
+---
+
+## Introduction
+
+
+## Data and Design
+
+
+## Analysis
+
+
+```{r}
+## open packages:
+library(tidyverse) # for data wrangling tools and data viz
+library(estimatr) # for model estimation with robust standard errors
+library(sjPlot) # for making prediction plots
+
+## the aid dataset:
+dt <-
+read_csv("https://raw.githubusercontent.com/milesdwilliams15/Teaching/refs/heads/main/DPR%20201/D
+ata/dpr201_unit1_data.csv")
+
+```
+
+```{r}
+set_theme()   
+set_palette(
+  qualitative = c("#EF6351", "#FFE3E0", "#481D24", "#F38375", "#5D4E60"),
+  sequential = c("white", "#481D24"),
+  diverging = c("#1E555C", "white", "#481D24"),
+  binary = c("steelblue", "red3")
+)
+```
+
+```{r}
+
+```
+
+
+
+## Conclusion
+
+
+\newpage
+
+## Code Appendix
+
+<!-- Don't touch this! This lets me see your code at the end of the rendered document. -->
+
+```{r ref.label=knitr::all_labels(), echo=TRUE, eval=FALSE}
+```
