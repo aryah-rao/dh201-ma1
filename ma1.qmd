@@ -19,44 +19,137 @@ execute:
 
 ## Introduction
 
-
 ## Data and Design
 
-
 ## Analysis
-
 
 ```{r}
 ## open packages:
 library(tidyverse) # for data wrangling tools and data viz
-library(estimatr) # for model estimation with robust standard errors
-library(sjPlot) # for making prediction plots
+library(estimatr)  # for model estimation with robust standard errors
+library(sjPlot)    # for making prediction plots
+library(cowplot)   # for combining plots
 
 ## the aid dataset:
-dt <-
-read_csv("https://raw.githubusercontent.com/milesdwilliams15/Teaching/refs/heads/main/DPR%20201/D
-ata/dpr201_unit1_data.csv")
+dt <- read_csv("https://raw.githubusercontent.com/milesdwilliams15/Teaching/refs/heads/main/DPR%20201/Data/dpr201_unit1_data.csv")
+
+## Data wrangling & Feature Engineering
+analysis_data <- dt %>%
+  mutate(
+    # Dependent Variable
+    aid_cut = asinh(disbursed_2025) - asinh(disbursed_2024),
+    
+    # Factor 1
+    military_density = us_troops/pop_2024,
+    asinh_military_density = asinh(military_density),
+    
+    # Factor 2
+    asinh_inf_2025 = asinh(inf_2025),
+    
+    # Factor 3
+    gov_polarization = abs(vdem_score - 0.5)
+  ) %>%
+  drop_na(aid_cut, asinh_military_density, asinh_inf_2025, gov_polarization) %>%
+  filter(is.finite(aid_cut))
+
+## Estimate the model
+model <- lm_robust(aid_cut ~ asinh_military_density + asinh_inf_2025 + gov_polarization, data = analysis_data, se_type = "HC1")
+
+model_smry <- tidy(model)
 
 ```
 
 ```{r}
-set_theme()   
-set_palette(
-  qualitative = c("#EF6351", "#FFE3E0", "#481D24", "#F38375", "#5D4E60"),
-  sequential = c("white", "#481D24"),
-  diverging = c("#1E555C", "white", "#481D24"),
-  binary = c("steelblue", "red3")
-)
+# Figure 1: Military density transformation
+p1 <- ggplot(analysis_data, aes(x = military_density)) +
+  geom_density(fill = "lightblue", alpha = 0.4) +
+  labs(title = "Figure 1: Distribution of Military Density", subtitle =  "Raw",x = "Troops per Million", y = "Density") +
+  theme_minimal()
+
+p2 <- ggplot(analysis_data, aes(x = asinh_military_density)) +
+  geom_density(fill = "lightblue", alpha = 0.4) +
+  labs(title = "", subtitle = "Transformed", x = "Asinh(Troops per Million)", y = "") +
+  theme_minimal()
+
+plot_grid(p1, p2, nrow = 1)
 ```
 
 ```{r}
+# Figure 2: Inflation 2025 transformation
+p3 <- ggplot(analysis_data, aes(x = inf_2025)) +
+  geom_density(fill = "lightcoral", alpha = 0.4) +
+  labs(title = "Figure 2: Distribution of Inflation 2025",subtitle =  "Raw", x = "Inflation (%)", y = "Density") +
+  theme_minimal()
+
+p4 <- ggplot(analysis_data, aes(x = asinh_inf_2025)) +
+  geom_density(fill = "lightcoral", alpha = 0.4) +
+  labs(title = "", subtitle =  "Transformed", x = "Asinh(Inflation)", y = "") +
+  theme_minimal()
+
+plot_grid(p3, p4, nrow = 1)
 
 ```
 
+```{r}
+# Figure 3: Coefficient Plot
+model_smry %>%
+  filter(term != "(Intercept)") %>%
+  ggplot(aes(
+    x = estimate,
+    xmin = conf.low,
+    xmax = conf.high,
+    y = term
+  )) +
+  geom_pointrange(color = "darkblue") +
+  # Add the p-values above the points
+  geom_text(aes(label = paste0("p = ", round(p.value, 3))), 
+            vjust = -1.5, 
+            size = 3.5, 
+            color = "black") +
+  geom_vline(xintercept = 0, linetype = 2) +
+  labs(
+    title = "Figure 3: Predictors of 2025 Aid Cuts",
+    x = "Coefficient Estimate (with 95% Confidence Intervals)",
+    y = NULL
+  ) +
+  scale_y_discrete(labels = c(
+    "gov_polarization" = "Government Polarization",
+    "asinh_inf_2025" = "Inflation (Asinh)", 
+    "asinh_military_density" = "Military Density (Asinh)"
+  ))
+```
 
+```{r}
+# Figure 4: Prediction Plots
+# Generate individual plots
+
+# Figure 4: Prediction Plots
+
+# Generate individual plots with short sub-titles
+p1 <- plot_model(model, type = "pred", terms = "gov_polarization", 
+                 title = "", 
+                 axis.title = c("Government Polarization", "Expected Aid Cuts"))
+
+p2 <- plot_model(model, type = "pred", terms = "asinh_military_density", 
+                 title = "", 
+                 axis.title = c("Troops per million (Asinh)", ""))
+
+p3 <- plot_model(model, type = "pred", terms = "asinh_inf_2025", 
+                 title = "", 
+                 axis.title = c("Inflation 2025 (Asinh)", ""))
+
+# Combine the three plots into one row
+plot_row <- plot_grid(p1, p2, p3, nrow = 1)
+
+# Create a standalone title object
+main_title <- ggdraw() + 
+  draw_label("Figure 4: Predicting U.S. Aid Cuts", x = 0.3, vjust = 1)
+
+# Combine the title and the row of plots
+plot_grid(main_title, plot_row, ncol = 1, rel_heights = c(0.1, 1))
+```
 
 ## Conclusion
-
 
 \newpage
 
