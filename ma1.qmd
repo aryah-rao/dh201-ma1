@@ -4,7 +4,7 @@ author: "Aryah, Nguyen, Jordyn"
 date: "Date: `r Sys.Date()`"
 format: 
   docx:
-    reference-doc: ../quarto_template.docx
+    #reference-doc: ../quarto_template.docx
     number-sections: true
     number-depth: 3
     fig-dpi: 500
@@ -18,6 +18,10 @@ execute:
 ---
 
 ## Introduction
+
+How do factors such as inflation, democracy scores, and U.S. military involvement influence the depth of U.S. aid cuts to recipient countries? U.S. foreign aid has long played an important role in addressing poverty, food insecurity, and public health challenges worldwide. When aid declines sharply, governments may struggle to provide essential services such as medicine, clean water, and agricultural support. Understanding why some countries experience larger reductions in aid than others matters because it can reveal the priorities shaping U.S. foreign policy decisions and international partnerships.
+
+In this analysis project, we examined three possible factors from receiving countries and saw how they interact with U.S. aid cuts. First, we evaluated economic conditions using 2024 inflation transformed with the inverse hyperbolic sine (asinh). Second, we chose to measure political polarization by calculating how far a country’s V-Dem democracy score is from the midpoint of 0.5. Third, we considered military presence through troop density, defined as the number of U.S. troops stationed in a country divided by its 2024 population. Together, these factors represent a country’s economic stability, political alignment, and security, and show how relevant they are to the U.S. aid program.
 
 ## Data and Design
 
