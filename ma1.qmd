@@ -19,11 +19,17 @@ execute:
 
 ## Introduction
 
-How do factors such as inflation, democracy scores, and U.S. military involvement influence the depth of U.S. aid cuts to recipient countries? U.S. foreign aid has long played an important role in addressing poverty, food insecurity, and public health challenges worldwide. When aid declines sharply, governments may struggle to provide essential services such as medicine, clean water, and agricultural support. Understanding why some countries experience larger reductions in aid than others matters because it can reveal the priorities shaping U.S. foreign policy decisions and international partnerships.
+How do factors such as inflation, democracy scores, and U.S. military involvement influence the depth of U.S. aid cuts to recipient countries? U.S. foreign aid has long played an important role in addressing poverty, food insecurity, and public health challenges worldwide. When aid declines sharply, aided governments may struggle to provide essential services such as medicine, clean water, and agricultural support. Regardless of foreign aid's importance, cuts have been made; therefore, understanding why some countries experience larger reductions in aid than others matters because it can reveal the priorities shaping U.S. foreign policy decisions and international partnerships. This can then help us to influence and improve the program in the future.
 
-In this analysis project, we examined three possible factors from receiving countries and saw how they interact with U.S. aid cuts. First, we evaluated economic conditions using 2024 inflation transformed with the inverse hyperbolic sine (asinh). Second, we chose to measure political polarization by calculating how far a country’s V-Dem democracy score is from the midpoint of 0.5. Third, we considered military presence through troop density, defined as the number of U.S. troops stationed in a country divided by its 2024 population. Together, these factors represent a country’s economic stability, political alignment, and security, and show how relevant they are to the U.S. aid program.
+In this analysis project, we examine three factors from recipient countries that may help explain why some experience deeper U.S. aid cuts than others. Inflation rates may matter because countries facing higher inflation often have weaker stability and greater need for external assistance, which could influence whether aid is reduced or maintained. Political alignment may also shape aid decisions, since governments that differ strongly from the U.S may be viewed as more or less important to maintain a good relationship with. Military presence is another possible factor, as countries hosting a larger number of U.S. troops may hold greater strategic importance and therefore be less likely to face sharp reductions. Together, these factors represent a country’s economic stability, political alignment, and security, and show how relevant they are to the U.S. aid program.
 
 ## Data and Design
+
+The data for this project come from several separate sources that provide information on the given U.S. aid, inflation rate, democracy score, population size, and military presence. The data from these sources were collected and created using different methods, which can improve accuracy and coverage. However, since each source can have its own biases and priorities, certain countries' data on the factors we’ve chosen aren’t included. These gaps can reduce the number of observations included in statistical tests and may affect how broadly the findings apply.
+
+The dependent variable measures the depth of aid cuts, defined as the change in U.S. aid disbursements between 2024 and 2025, so that larger negative values indicate larger reductions. The explanatory variables capture three factors that could have influenced this cut. Inflation is measured using 2024 inflation transformed with the inverse hyperbolic sine, which helps compare countries with very different inflation levels while preserving meaningful interpretation for small values. Democracy assessment is measured through a country’s vdem score. Finally, troop density calculated as the number of U.S. troops stationed in a country divided by its 2024 population, which will also be transformed with the inverse hyperbolic sine.
+
+These predictor values are transformed with asinh to reduce skew and improve comparability across countries. We will first graph the distribution of variables to justify these transformations and ensure they are appropriate. We will then use a coefficient plot with confidence intervals to show the magnitude and uncertainty of each predictor. Finally, we will show prediction plots in which the change in aid is modeled as a function of military presence, inflation, and political polarization. All statistical inference relies on robust standard errors to account for potential differences in error variability across countries.
 
 ## Analysis
 
@@ -60,7 +66,6 @@ analysis_data <- dt %>%
 model <- lm_robust(aid_cut ~ asinh_military_density + asinh_inf_2025 + gov_polarization, data = analysis_data, se_type = "HC1")
 
 model_smry <- tidy(model)
-
 ```
 
 ```{r}
