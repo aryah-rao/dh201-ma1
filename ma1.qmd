@@ -1,5 +1,5 @@
 ---
-title: "Main Assignment 1"
+title: "How Economic Vulnerability Undermined Military Strategy in the 2025 U. S. Aid Cuts"
 author: "Aryah, Nguyen, Jordyn"
 date: "Date: `r Sys.Date()`"
 format: 
@@ -19,17 +19,17 @@ execute:
 
 ## Introduction
 
-How do factors such as inflation, democracy scores, and U.S. military involvement influence the depth of U.S. aid cuts to recipient countries? U.S. foreign aid has long played an important role in addressing poverty, food insecurity, and public health challenges worldwide. When aid declines sharply, aided governments may struggle to provide essential services such as medicine, clean water, and agricultural support. Regardless of foreign aid's importance, cuts have been made; therefore, understanding why some countries experience larger reductions in aid than others matters because it can reveal the priorities shaping U.S. foreign policy decisions and international partnerships. This can then help us to influence and improve the program in the future.
+How do factors such as inflation, democracy scores, and U.S. military involvement influence the depth of U.S. aid cuts to recipient countries? U.S. foreign aid has long played an important role in addressing poverty, food insecurity, and public health challenges worldwide. When aid declines sharply, aided governments may struggle to provide essential services like medicine, clean water, and agricultural support. Because significant cuts have occurred, understanding why some countries face larger reductions than others is important. It can reveal the real priorities shaping U.S. foreign policy and international partnerships, which can help us understand and improve the program in the future.
 
-In this analysis project, we examine three factors from recipient countries that may help explain why some experience deeper U.S. aid cuts than others. Inflation rates may matter because countries facing higher inflation often have weaker stability and greater need for external assistance, which could influence whether aid is reduced or maintained. Political alignment may also shape aid decisions, since governments that differ strongly from the U.S may be viewed as more or less important to maintain a good relationship with. Military presence is another possible factor, as countries hosting a larger number of U.S. troops may hold greater strategic importance and therefore be less likely to face sharp reductions. Together, these factors represent a country’s economic stability, political alignment, and security, and show how relevant they are to the U.S. aid program.
+In this project, we examine three factors that may help explain why some recipient countries experience deeper U.S. aid cuts than others. First, inflation rates may matter because countries with high inflation usually have less economic stability and a greater need for outside help. Second, political alignment may shape aid decisions, since governments that differ strongly from U.S. political values might be viewed as less important partners. Finally, military presence is another possible factor; countries hosting a large number of U.S. troops might hold greater strategic importance and therefore be protected from sharp budget reductions. Together, these factors represent a country’s economic need, political alignment, and security importance to the United States.
 
 ## Data and Design
 
-The data for this project come from several separate sources that provide information on the given U.S. aid, inflation rate, democracy score, population size, and military presence. The data from these sources were collected and created using different methods, which can improve accuracy and coverage. However, since each source can have its own biases and priorities, certain countries' data on the factors we’ve chosen aren’t included. These gaps can reduce the number of observations included in statistical tests and may affect how broadly the findings apply.
+The data for this project come from several separate sources that provide information on U.S. aid, inflation rates, democracy scores, population sizes, and military presence. Specifically, the U.S. aid disbursement data comes from [*foreignassistance.gov*](foreignassistance.gov), while macroeconomic indicators like population and inflation were sourced from [*globalmacrodata.com*](globalmacrodata.com). Our political and military variables were accessed via R packages, with democracy scores coming from the Varieties of Democracy (V-Dem) Polyarchy Index via [`{isard}`](https://svmiller.com/isard/index.html) and troop deployments via [`{troopdata}`](https://meflynn.github.io/troopdata/). A strength of combining these sources is that it provides a comprehensive, multi-dimensional view of recipient countries. However, a weakness is that merging different databases often results in missing data for certain countries, which reduces the number of observations available for our statistical tests and may limit how broadly our findings apply.
 
 The dependent variable measures the depth of aid cuts, defined as the change in U.S. aid disbursements between 2024 and 2025, so that larger negative values indicate larger reductions. The explanatory variables capture three factors that could have influenced this cut. Inflation is measured using 2024 inflation transformed with the inverse hyperbolic sine, which helps compare countries with very different inflation levels while preserving meaningful interpretation for small values. Democracy assessment is measured through a country’s vdem score. Finally, troop density calculated as the number of U.S. troops stationed in a country divided by its 2024 population, which will also be transformed with the inverse hyperbolic sine.
 
-These predictor values are transformed with asinh to reduce skew and improve comparability across countries. We will first graph the distribution of variables to justify these transformations and ensure they are appropriate. We will then use a coefficient plot with confidence intervals to show the magnitude and uncertainty of each predictor. Finally, we will show prediction plots in which the change in aid is modeled as a function of military presence, inflation, and political polarization. All statistical inference relies on robust standard errors to account for potential differences in error variability across countries.
+These predictor values are transformed with `asinh` to reduce skew and improve comparability across countries. We will first graph the distribution of variables to justify these transformations and ensure they are appropriate. We will then use a coefficient plot with confidence intervals to show the magnitude and uncertainty of each predictor. Finally, we will show prediction plots in which the change in aid is modeled as a function of military presence, inflation, and political polarization. All statistical inference relies on robust standard errors to account for potential differences in error variability across countries.
 
 ## Analysis
 
@@ -46,27 +46,31 @@ dt <- read_csv("https://raw.githubusercontent.com/milesdwilliams15/Teaching/refs
 ## Data wrangling & Feature Engineering
 analysis_data <- dt %>%
   mutate(
-    # Dependent Variable
+    # Dependent Variable: Change in Asinh Disbursements
     aid_cut = asinh(disbursed_2025) - asinh(disbursed_2024),
     
-    # Factor 1
-    military_density = us_troops/pop_2024,
+    # Factor 1: Military Density
+    military_density = us_troops / pop_2024,
     asinh_military_density = asinh(military_density),
     
-    # Factor 2
+    # Factor 2: Inflation
     asinh_inf_2025 = asinh(inf_2025),
     
-    # Factor 3
-    gov_polarization = abs(vdem_score - 0.5)
-  ) %>%
+    # Factor 3: Political Polarization
+    gov_polarization = abs(vdem_score - 0.5)) %>%
   drop_na(aid_cut, asinh_military_density, asinh_inf_2025, gov_polarization) %>%
   filter(is.finite(aid_cut))
 
-## Estimate the model
-model <- lm_robust(aid_cut ~ asinh_military_density + asinh_inf_2025 + gov_polarization, data = analysis_data, se_type = "HC1")
+## Set plot theme globally
+set_theme(base = theme_minimal())
 
+## Estimate the model
+model <- lm_robust(aid_cut ~ asinh_military_density + asinh_inf_2025 + gov_polarization,                    data = analysis_data, 
+                   se_type = "HC1")
 model_smry <- tidy(model)
 ```
+
+Before evaluating our regression model, we must visually inspect our continuous variables to ensure our transformations were effective. Figures 1 and 2 display the density plots for military presence and inflation, respectively. In their raw forms, both variables are highly right-skewed; the vast majority of countries cluster near zero, while a handful of extreme outliers stretch the x-axis. This skew would violate the assumptions of a linear model. By applying the inverse hyperbolic sine (`asinh`) transformation, we successfully compress these long tails and normalize the distributions, making the data appropriate for regression analysis.
 
 ```{r}
 # Figure 1: Military density transformation
@@ -99,6 +103,8 @@ plot_grid(p3, p4, nrow = 1)
 
 ```
 
+Now that the data is balanced, we run our linear regression model to test our three factors. Figure 3 shows the estimated effect of each factor, along with lines indicating our level of certainty (confidence intervals) and statistical significance (p-values). The result for military density is negative and statistically significant (p = 0.006). This indicates that countries hosting a higher density of U.S. troops unexpectedly faced deeper cuts to their aid. Conversely, the result for inflation is positive and significant (p = 0.012), demonstrating that the U.S. protected nations experiencing severe economic instability from the worst cuts. Political alignment (polarization) is not statistically significant (p = 0.386), meaning the political ideology of the recipient government did not systematically influence the budget decisions.
+
 ```{r}
 # Figure 3: Coefficient Plot
 model_smry %>%
@@ -128,6 +134,8 @@ model_smry %>%
   ))
 ```
 
+To visualize the substantive magnitude of these findings, Figure 4 provides marginal prediction plots for each variable. Panel B illustrates a *clear penalty* for military hosts: as the density of U.S. troops increases, the expected change in aid drops sharply into negative numbers (deeper cuts). Panel C highlights a *positive upward slope*, indicating that higher inflation correlates with protected (less negative) aid payments. Finally, Panel A remains *relatively flat*, visually confirming that the U.S. did not base its budget decisions on whether a nation was a strong democracy or an autocracy.
+
 ```{r}
 # Figure 4: Prediction Plots
 # Generate individual plots
@@ -136,15 +144,15 @@ model_smry %>%
 
 # Generate individual plots with short sub-titles
 p1 <- plot_model(model, type = "pred", terms = "gov_polarization", 
-                 title = "", 
+                 title = "A", 
                  axis.title = c("Government Polarization", "Expected Aid Cuts"))
 
 p2 <- plot_model(model, type = "pred", terms = "asinh_military_density", 
-                 title = "", 
+                 title = "B", 
                  axis.title = c("Troops per million (Asinh)", ""))
 
 p3 <- plot_model(model, type = "pred", terms = "asinh_inf_2025", 
-                 title = "", 
+                 title = "C", 
                  axis.title = c("Inflation 2025 (Asinh)", ""))
 
 # Combine the three plots into one row
@@ -159,6 +167,10 @@ plot_grid(main_title, plot_row, ncol = 1, rel_heights = c(0.1, 1))
 ```
 
 ## Conclusion
+
+This analysis sought to determine whether a specific logic drove the depth of U.S. foreign aid cuts in 2025. By testing the impact of military presence, economic instability, and political ideology, our findings show that the reductions were neither random nor based on political values. Instead, the U.S. government appears to have prioritized economic need over its military presence.
+
+Unexpectedly, nations heavily reliant on the U.S. military (those with high troop density) experienced the sharpest cuts in actual aid money. This suggests the U.S. administration may have viewed these nations as capable of absorbing the financial hit, or it identified their programs as the easiest targets for immediate budget savings. On the other hand, the U.S. actively spared countries suffering from severe inflation, acting as a financial safety net for the most economically vulnerable partners. Ultimately, these results reveal that in 2025, American foreign aid operated primarily as an economic first-responder rather than a tool to reward military or political allies.
 
 \newpage
 
