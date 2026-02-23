@@ -21,11 +21,11 @@ execute:
 
 How do factors such as inflation, democracy scores, and U.S. military involvement influence the depth of U.S. aid cuts to recipient countries? U.S. foreign aid has long played an important role in addressing poverty, food insecurity, and public health challenges worldwide. When aid declines sharply, aided governments may struggle to provide essential services like medicine, clean water, and agricultural support. Research on recent foreign aid cuts shows that reductions often have immediate downstream effects on health systems, food security, and economic stability in receiving countries (Better World Campaign). Because significant cuts have occurred, understanding why some countries face larger reductions than others is important. It can reveal the real priorities shaping U.S. foreign policy and international partnerships, which can help us understand and improve the program in the future.
 
-In this project, we examine three factors that may help explain why some recipient countries experience deeper U.S. aid cuts than others. To motivate our selection of factors, we reference "Who Gives Foreign Aid to Whom and Why?" researched by Alesina and Dollar. In their study, they determine that aid disbursement is primarily driven by strategic and political factors, not just need (Alesina & Dollar, 2000). This suggests that aid cuts, much like allocations, may reflect a balance between humanitarian concerns and broader political priorities. First, we consider inflation as a measure of economic vulnerability. Inflation rates may matter because countries with high inflation usually have less economic stability and a greater need for outside help. Second, as Alesina and Dollar explore, political alignment may shape aid decisions, since governments that differ strongly from U.S. political values might be viewed as less important partners. If this is the case, countries that align less closely with the U.S. democratic system may be more vulnerable to aid cuts. Finally, we include U.S. military presence to capture a country's strategic importance. Countries hosting a large number of U.S. troops might hold greater strategic importance and, therefore, be protected from sharp budget reductions. Together, these factors represent a country’s economic need, political alignment, and security importance to the United States, allowing us to understand whether U.S. aid cuts in 2025 followed a pattern or reflected trade-offs between humanitiarian and strategic priorities.
+In this project, we examine three factors that may help explain why some recipient countries experience deeper U.S. aid cuts than others. To motivate our selection of factors, we reference "Who Gives Foreign Aid to Whom and Why?" researched by Alesina and Dollar. In their study, they determine that aid disbursement is primarily driven by strategic and political factors, not just need (Alesina & Dollar, 2000). This suggests that aid cuts, much like allocations, may reflect a balance between humanitarian concerns and broader political priorities. First, we consider inflation as a measure of economic vulnerability. Inflation rates may matter because countries with high inflation usually have less economic stability and a greater need for outside help. Second, as Alesina and Dollar explore, political alignment may shape aid decisions, since governments that differ strongly from U.S. political values might be viewed as less important partners. If this is the case, countries that align less closely with the U.S. democratic system may be more vulnerable to aid cuts. Finally, we include U.S. military presence to capture a country's strategic importance. Countries hosting a large number of U.S. troops might hold greater strategic importance and, therefore, be protected from sharp budget reductions. Together, these factors represent a country’s economic need, political alignment, and security importance to the United States, allowing us to understand whether U.S. aid cuts in 2025 followed a pattern or reflected trade-offs between humantiarian and strategic priorities.
 
 ## Data and Design
 
-The data for this project come from several separate sources that provide information on U.S. aid, inflation rates, democracy scores, population sizes, and military presence. Specifically, the U.S. aid disbursement data comes from [*foreignassistance.gov*] (ForeignAssistance.gov, 2026), while macroeconomic indicators like population and inflation were sourced from [*globalmacrodata.com*] (Mueller et al., 2026). Our political and military variables were accessed via R packages, with democracy scores coming from the Varieties of Democracy (V-Dem) Polyarchy Index via [`{isard}`] (Miller, 2022) and troop deployments via [`{troopdata}`](https://meflynn.github.io/troopdata/). A strength of combining these sources is that it provides a comprehensive, multi-dimensional view of recipient countries. However, a weakness is that merging different databases often results in missing data for certain countries, which reduces the number of observations available for our statistical tests and may limit how broadly our findings apply.
+The data for this project come from several separate sources that provide information on U.S. aid, inflation rates, democracy scores, population sizes, and military presence. Specifically, the U.S. aid disbursement data comes from [*foreignassistance.gov*](foreignassistance.gov), while macroeconomic indicators like population and inflation were sourced from [*globalmacrodata.com*](globalmacrodata.com). Our political and military variables were accessed via R packages, with democracy scores coming from the Varieties of Democracy (V-Dem) Polyarchy Index via [`{isard}`](https://svmiller.com/isard/index.html) and troop deployments via [`{troopdata}`](https://meflynn.github.io/troopdata/). A strength of combining these sources is that it provides a comprehensive, multi-dimensional view of recipient countries. However, a weakness is that merging different databases often results in missing data for certain countries, which reduces the number of observations available for our statistical tests and may limit how broadly our findings apply.
 
 The dependent variable measures the depth of aid cuts, defined as the change in U.S. aid disbursements between 2024 and 2025, so that larger negative values indicate larger reductions. The explanatory variables capture three factors that could have influenced this cut. Inflation is measured using 2024 inflation transformed with the inverse hyperbolic sine, which helps compare countries with very different inflation levels while preserving meaningful interpretation for small values. Democracy assessment is measured through a country’s vdem score. Finally, troop density calculated as the number of U.S. troops stationed in a country divided by its 2024 population, which will also be transformed with the inverse hyperbolic sine.
 
@@ -44,7 +44,7 @@ library(cowplot)   # for combining plots
 dt <- read_csv("https://raw.githubusercontent.com/milesdwilliams15/Teaching/refs/heads/main/DPR%20201/Data/dpr201_unit1_data.csv")
 
 ## Data wrangling & Feature Engineering
-analysis_data <- dt %>%
+analysis_data <- dt |>
   mutate(
     # Dependent Variable: Change in Asinh Disbursements
     aid_cut = asinh(disbursed_2025) - asinh(disbursed_2024),
@@ -57,58 +57,55 @@ analysis_data <- dt %>%
     asinh_inf_2025 = asinh(inf_2025),
     
     # Factor 3: Political Polarization
-    gov_polarization = abs(vdem_score - 0.5)) %>%
-  drop_na(aid_cut, asinh_military_density, asinh_inf_2025, gov_polarization) %>%
+    gov_polarization = abs(vdem_score - 0.5)) |>
+  drop_na(aid_cut, asinh_military_density, asinh_inf_2025, gov_polarization) |>
   filter(is.finite(aid_cut))
 
 ## Set plot theme globally
 set_theme(base = theme_minimal())
 
 ## Estimate the model
-model <- lm_robust(aid_cut ~ asinh_military_density + asinh_inf_2025 + gov_polarization,                    data = analysis_data, 
-                   se_type = "HC1")
+model <- lm_robust(aid_cut ~ asinh_military_density + asinh_inf_2025 + gov_polarization, data = analysis_data, se_type = "HC1")
 model_smry <- tidy(model)
 ```
 
-Before evaluating our regression model, we must visually inspect our continuous variables to ensure our transformations were effective. Figures 1 and 2 display the density plots for military presence and inflation, respectively. In their raw forms, both variables are highly right-skewed; the vast majority of countries cluster near zero, while a handful of extreme outliers stretch the x-axis. This skew would violate the assumptions of a linear model. By applying the inverse hyperbolic sine (`asinh`) transformation, we successfully compress these long tails and normalize the distributions, making the data appropriate for regression analysis.
+Before evaluating our regression model, we must visually inspect our continuous variables to ensure our transformations were effective. Figures 1 displays the density plots for military presence and inflation, respectively. In their raw forms, both variables are highly right-skewed; the vast majority of countries cluster near zero, while a handful of extreme outliers stretch the x-axis. This skew would violate the assumptions of a linear model. By applying the inverse hyperbolic sine (`asinh`) transformation, we successfully compress these long tails and normalize the distributions, making the data appropriate for regression analysis.
 
 ```{r}
-# Figure 1: Military density transformation
+# Figure 1: Model Factors Transformation
+# Military density transformation
 p1 <- ggplot(analysis_data, aes(x = military_density)) +
   geom_density(fill = "lightblue", alpha = 0.4) +
-  labs(title = "Figure 1: Distribution of Military Density", subtitle =  "Raw",x = "Troops per Million", y = "Density") +
+  labs(title = "Figure 1: Distribution of Model Factors", subtitle =  "Military Density (Raw)",x = "Troops per Million", y = "Density") +
   theme_minimal()
 
 p2 <- ggplot(analysis_data, aes(x = asinh_military_density)) +
   geom_density(fill = "lightblue", alpha = 0.4) +
-  labs(title = "", subtitle = "Transformed", x = "Asinh(Troops per Million)", y = "") +
-  theme_minimal()
+  labs(title = "", subtitle = "Military Density (Transformed)", x = "Asinh(Troops per Million)", y = "")
 
-plot_grid(p1, p2, nrow = 1)
-```
+inf <- plot_grid(p1, p2, nrow = 1)
 
-```{r}
-# Figure 2: Inflation 2025 transformation
+# Inflation 2025 transformation
 p3 <- ggplot(analysis_data, aes(x = inf_2025)) +
   geom_density(fill = "lightcoral", alpha = 0.4) +
-  labs(title = "Figure 2: Distribution of Inflation 2025",subtitle =  "Raw", x = "Inflation (%)", y = "Density") +
+  labs(title = "",subtitle =  "Inflation 2025 (Raw)", x = "Inflation (%)", y = "Density") +
   theme_minimal()
 
 p4 <- ggplot(analysis_data, aes(x = asinh_inf_2025)) +
   geom_density(fill = "lightcoral", alpha = 0.4) +
-  labs(title = "", subtitle =  "Transformed", x = "Asinh(Inflation)", y = "") +
-  theme_minimal()
+  labs(title = "", subtitle =  "Inflation 2025 (Transformed)", x = "Asinh(Inflation)", y = "")
 
-plot_grid(p3, p4, nrow = 1)
+mil <- plot_grid(p3, p4, nrow = 1)
 
+plot_grid(inf, mil, ncol = 1)
 ```
 
-Now that the data is balanced, we run our linear regression model to test our three factors. Figure 3 shows the estimated effect of each factor, along with lines indicating our level of certainty (confidence intervals) and statistical significance (p-values). The result for military density is negative and statistically significant (p = 0.006). This indicates that countries hosting a higher density of U.S. troops unexpectedly faced deeper cuts to their aid. Conversely, the result for inflation is positive and significant (p = 0.012), demonstrating that the U.S. protected nations experiencing severe economic instability from the worst cuts. Political alignment (polarization) is not statistically significant (p = 0.386), meaning the political ideology of the recipient government did not systematically influence the budget decisions.
+Now that the data is balanced, we run our linear regression model to test our three factors. Figure 2 shows the estimated effect of each factor, along with lines indicating our level of certainty (confidence intervals) and statistical significance (p-values). The result for military density is negative and statistically significant (p = 0.006). This indicates that countries hosting a higher density of U.S. troops unexpectedly faced deeper cuts to their aid. Conversely, the result for inflation is positive and significant (p = 0.012), demonstrating that the U.S. protected nations experiencing severe economic instability from the worst cuts. Political alignment (polarization) is not statistically significant (p = 0.386), meaning the political ideology of the recipient government did not systematically influence the budget decisions.
 
 ```{r}
-# Figure 3: Coefficient Plot
-model_smry %>%
-  filter(term != "(Intercept)") %>%
+# Figure 2: Coefficient Plot
+model_smry |>
+  filter(term != "(Intercept)") |>
   ggplot(aes(
     x = estimate,
     xmin = conf.low,
@@ -123,7 +120,8 @@ model_smry %>%
             color = "black") +
   geom_vline(xintercept = 0, linetype = 2) +
   labs(
-    title = "Figure 3: Predictors of 2025 Aid Cuts",
+    title = "Figure 3: Which factors contributed to 2025 Aid Cuts?",
+    subtitle = "% change in asinh(Aid Cuts) per a % change in predictors",
     x = "Coefficient Estimate (with 95% Confidence Intervals)",
     y = NULL
   ) +
@@ -134,15 +132,10 @@ model_smry %>%
   ))
 ```
 
-To visualize the substantive magnitude of these findings, Figure 4 provides marginal prediction plots for each variable. Panel B illustrates a *clear penalty* for military hosts: as the density of U.S. troops increases, the expected change in aid drops sharply into negative numbers (deeper cuts). Panel C highlights a *positive upward slope*, indicating that higher inflation correlates with protected (less negative) aid payments. Finally, Panel A remains *relatively flat*, visually confirming that the U.S. did not base its budget decisions on whether a nation was a strong democracy or an autocracy.
+To visualize the substantive magnitude of these findings, Figure 3 provides marginal prediction plots for each variable. Panel B illustrates a *clear penalty* for military hosts: as the density of U.S. troops increases, the expected change in aid drops sharply into negative numbers (deeper cuts). Panel C highlights a *positive upward slope*, indicating that higher inflation correlates with protected (less negative) aid payments. Finally, Panel A remains *relatively flat*, visually confirming that the U.S. did not base its budget decisions on whether a nation was a strong democracy or an autocracy.
 
 ```{r}
 # Figure 4: Prediction Plots
-# Generate individual plots
-
-# Figure 4: Prediction Plots
-
-# Generate individual plots with short sub-titles
 p1 <- plot_model(model, type = "pred", terms = "gov_polarization", 
                  title = "A", 
                  axis.title = c("Government Polarization", "Expected Aid Cuts"))
@@ -155,14 +148,10 @@ p3 <- plot_model(model, type = "pred", terms = "asinh_inf_2025",
                  title = "C", 
                  axis.title = c("Inflation 2025 (Asinh)", ""))
 
-# Combine the three plots into one row
+# Combine
 plot_row <- plot_grid(p1, p2, p3, nrow = 1)
-
-# Create a standalone title object
 main_title <- ggdraw() + 
-  draw_label("Figure 4: Predicting U.S. Aid Cuts", x = 0.3, vjust = 1)
-
-# Combine the title and the row of plots
+  draw_label("Figure 4: Predicting 2025 U.S. Aid Cuts", x = 0.3, vjust = 1)
 plot_grid(main_title, plot_row, ncol = 1, rel_heights = c(0.1, 1))
 ```
 
@@ -181,11 +170,6 @@ Alesina, A., & Dollar, D. (2000). Who Gives Foreign Aid to Whom and Why? Journal
 Better World Campaign. (n.d.). The impact of foreign assistance cuts. Better World Campaign. https://betterworldcampaign.org/impact-of-foreign-assistance-cu ts
 
 Hurst, R., Tidwell, T., & Hawkins, D. (2017). Down the Rathole? Public Support for US Foreign Aid. International Studies Quarterly, 61(2), 442–454. http://www.jstor.org/stable/44510179
-
-Mueller, K., Xu, C., Lehbib, M., & Chen, Z. (2026). The Global Macro Database: A New International Macroeconomic Dataset (Version 2026-01). National Bureau of Economic Research. http://www.nber.org/papers/w33714. 
-
-
-
 
 \newpage
 
