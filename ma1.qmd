@@ -25,7 +25,7 @@ In this project, we examine three factors that may help explain why some recipie
 
 ## Data and Design
 
-The data for this project come from several separate sources that provide information on U.S. aid, inflation rates, democracy scores, population sizes, and military presence. Specifically, the U.S. aid disbursement data comes from [*foreignassistance.gov*](foreignassistance.gov), while macroeconomic indicators like population and inflation were sourced from [*globalmacrodata.com*](globalmacrodata.com). Our political and military variables were accessed via R packages, with democracy scores coming from the Varieties of Democracy (V-Dem) Polyarchy Index via [`{isard}`](https://svmiller.com/isard/index.html) and troop deployments via [`{troopdata}`](https://meflynn.github.io/troopdata/). A strength of combining these sources is that it provides a comprehensive, multi-dimensional view of recipient countries. However, a weakness is that merging different databases often results in missing data for certain countries, which reduces the number of observations available for our statistical tests and may limit how broadly our findings apply.
+The data for this project come from several separate sources that provide information on U.S. aid, inflation rates, democracy scores, population sizes, and military presence. Specifically, the U.S. aid disbursement data comes from [*foreignassistance.gov*] (ForeignAssistance.gov, 2026), while macroeconomic indicators like population and inflation were sourced from [*globalmacrodata.com*] (Mueller et al., 2026). Our political and military variables were accessed via R packages, with democracy scores coming from the Varieties of Democracy (V-Dem) Polyarchy Index via [`{isard}`] (Miller, 2022) and troop deployments via [`{troopdata}`](https://meflynn.github.io/troopdata/). A strength of combining these sources is that it provides a comprehensive, multi-dimensional view of recipient countries. However, a weakness is that merging different databases often results in missing data for certain countries, which reduces the number of observations available for our statistical tests and may limit how broadly our findings apply.
 
 The dependent variable measures the depth of aid cuts, defined as the change in U.S. aid disbursements between 2024 and 2025, so that larger negative values indicate larger reductions. The explanatory variables capture three factors that could have influenced this cut. Inflation is measured using 2024 inflation transformed with the inverse hyperbolic sine, which helps compare countries with very different inflation levels while preserving meaningful interpretation for small values. Democracy assessment is measured through a country’s vdem score. Finally, troop density calculated as the number of U.S. troops stationed in a country divided by its 2024 population, which will also be transformed with the inverse hyperbolic sine.
 
@@ -181,6 +181,11 @@ Alesina, A., & Dollar, D. (2000). Who Gives Foreign Aid to Whom and Why? Journal
 Better World Campaign. (n.d.). The impact of foreign assistance cuts. Better World Campaign. https://betterworldcampaign.org/impact-of-foreign-assistance-cu ts
 
 Hurst, R., Tidwell, T., & Hawkins, D. (2017). Down the Rathole? Public Support for US Foreign Aid. International Studies Quarterly, 61(2), 442–454. http://www.jstor.org/stable/44510179
+
+Mueller, K., Xu, C., Lehbib, M., & Chen, Z. (2026). The Global Macro Database: A New International Macroeconomic Dataset (Version 2026-01). National Bureau of Economic Research. http://www.nber.org/papers/w33714. 
+
+
+
 
 \newpage
 
