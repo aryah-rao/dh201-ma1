@@ -135,7 +135,7 @@ model_smry |>
 To visualize the substantive magnitude of these findings, Figure 3 provides marginal prediction plots for each variable. Panel B illustrates a *clear penalty* for military hosts: as the density of U.S. troops increases, the expected change in aid drops sharply into negative numbers (deeper cuts). Panel C highlights a *positive upward slope*, indicating that higher inflation correlates with protected (less negative) aid payments. Finally, Panel A remains *relatively flat*, visually confirming that the U.S. did not base its budget decisions on whether a nation was a strong democracy or an autocracy.
 
 ```{r}
-# Figure 4: Prediction Plots
+# Figure 3: Prediction Plots
 p1 <- plot_model(model, type = "pred", terms = "gov_polarization", 
                  title = "A", 
                  axis.title = c("Government Polarization", "Expected Aid Cuts"))
@@ -151,7 +151,7 @@ p3 <- plot_model(model, type = "pred", terms = "asinh_inf_2025",
 # Combine
 plot_row <- plot_grid(p1, p2, p3, nrow = 1)
 main_title <- ggdraw() + 
-  draw_label("Figure 4: Predicting 2025 U.S. Aid Cuts", x = 0.3, vjust = 1)
+  draw_label("Figure 3: Predicting 2025 U.S. Aid Cuts", x = 0.3, vjust = 1)
 plot_grid(main_title, plot_row, ncol = 1, rel_heights = c(0.1, 1))
 ```
 
